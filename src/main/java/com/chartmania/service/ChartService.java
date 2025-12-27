@@ -1,5 +1,7 @@
 package com.chartmania.service;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.chartmania.dto.GenericResponseDTO;
@@ -10,8 +12,14 @@ import com.chartmania.repository.ChartRepository;
 @Service
 public class ChartService {
     private final ChartRepository chartRepository;
+
     public ChartService(ChartRepository chartRepository) {
         this.chartRepository = chartRepository;
+    }
+
+    public Page<Chart> getCharts(int page, int pageSize) {
+        Pageable pageable = PageRequest.of(page, pageSize);
+        return chartRepository.findAll(pageable);
     }
 
     public GenericResponseDTO createChart(CreateChartRequest data) {

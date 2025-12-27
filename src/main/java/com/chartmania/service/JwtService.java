@@ -19,6 +19,7 @@ import com.chartmania.repository.RefreshTokenRepository;
 import com.chartmania.repository.UserRepository;
 import org.springframework.security.crypto.keygen.Base64StringKeyGenerator;
 import org.springframework.security.crypto.keygen.StringKeyGenerator;
+import com.chartmania.dto.auth.AccessTokenGeneratedDTO;
 
 @Service
 public class JwtService {
@@ -37,14 +38,16 @@ public class JwtService {
     }
 
     /** Access Token */
-    public String generate(Authentication auth) throws Exception {
+    public AccessTokenGeneratedDTO generate(Authentication auth) throws Exception {
         Instant now = Instant.now();
+        Instant expiresAt = now.plus(this.expMinutes, ChronoUnit.MINUTES);
         try {
             JwtClaimsSet claims = JwtClaimsSet.builder().issuer(this.issuer).subject(auth.getName()).issuedAt(now)
-                    .expiresAt(now.plus(this.expMinutes, ChronoUnit.MINUTES)).build();
+                    .expiresAt(expiresAt).build();
             JwsHeader header = JwsHeader.with(MacAlgorithm.HS256).build();
 
-            return encoder.encode(JwtEncoderParameters.from(header, claims)).getTokenValue();
+            String token = encoder.encode(JwtEncoderParameters.from(header, claims)).getTokenValue();
+            return new AccessTokenGeneratedDTO(token,expiresAt);
         } catch (Throwable e) {
             System.out.println(e);
             throw new Exception("An error occurs during access token creation: " + e.getMessage());

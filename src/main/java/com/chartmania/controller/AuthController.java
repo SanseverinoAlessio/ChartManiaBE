@@ -4,6 +4,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -12,16 +13,18 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.chartmania.dto.GenericResponseDTO;
-import com.chartmania.dto.auth.LoginRequestDTO;
+import com.chartmania.dto.auth.AccessTokenGeneratedDTO;
 import com.chartmania.dto.auth.AccessTokenResponseDTO;
+import com.chartmania.dto.auth.LoginRequestDTO;
+import com.chartmania.dto.auth.RefreshSessionResultDTO;
 import com.chartmania.dto.auth.RegisterRequestDTO;
-import com.chartmania.model.User;
 import com.chartmania.service.AuthService;
 import com.chartmania.service.JwtService;
+import com.chartmania.service.RefreshTokenService;
 import com.chartmania.util.CookieUtil;
+
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import com.chartmania.service.RefreshTokenService;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -64,23 +67,23 @@ class AuthController {
                     new UsernamePasswordAuthenticationToken(requestData.getUsername(), requestData.getPassword()));
         }
 
-        catch (Exception e) {
+        catch (AuthenticationException e) {
             System.out.println(e);
-            return ResponseEntity.status(401).body(new AccessTokenResponseDTO(0, "Wrong credentials", "Bearer", ""));
+            return ResponseEntity.status(401).body(new AccessTokenResponseDTO(0, "Wrong credentials", "Bearer", "",null));
         }
 
         try {
             // Access token
-            String token = jwtService.generate(auth);
+            AccessTokenGeneratedDTO token = jwtService.generate(auth);
 
             // Refresh Token
             String refreshToken = refreshTokenService.generateRefreshToken(auth);
             cookieUtil.createRefreshCookie(response, refreshToken);
 
-            return ResponseEntity.ok(new AccessTokenResponseDTO(1, "", "Bearer", token));
+            return ResponseEntity.ok(new AccessTokenResponseDTO(1, "", "Bearer", token.getToken(),token.getExpiresAt()));
 
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(new AccessTokenResponseDTO(0, "Server Error", "Bearer", ""));
+            return ResponseEntity.status(500).body(new AccessTokenResponseDTO(0, "Server Error", "Bearer", "",null));
         }
     }
 
@@ -102,42 +105,18 @@ class AuthController {
     @PostMapping("/refresh-token")
     public ResponseEntity<AccessTokenResponseDTO> refreshToken(
             @CookieValue(name = "refresh-token") String refreshToken, HttpServletResponse response) {
+                        
         // Verify if refresh token is valid
         if(refreshToken == null)
-            return ResponseEntity.status(400).body(new AccessTokenResponseDTO(0, "No refresh token found", "Bearer", ""));
+            return ResponseEntity.status(400).body(new AccessTokenResponseDTO(0, "No refresh token found", "Bearer", "",null));
 
         try {
-            Boolean isTokenValid = refreshTokenService.isTokenValid(refreshToken);
-            // If the token is no longer valid
-            if (!isTokenValid) {
-                refreshTokenService.deleteRefreshToken(refreshToken);
-                cookieUtil.clearRefreshCookie(response);
-                return ResponseEntity.status(401)
-                        .body(new AccessTokenResponseDTO(0, "Refresh Token is not valid", "Bearer", ""));
-            }
-
-            User user = refreshTokenService.getUserFromToken(refreshToken);
-
-            Authentication auth = new UsernamePasswordAuthenticationToken(
-                    user.getUsername(),
-                    null,
-                    null);
-
-            String token = jwtService.generate(auth);
-
-            // Regenerate refresh token
-            String newRefreshToken;
-
-            refreshTokenService.deleteRefreshToken(refreshToken);
-            newRefreshToken = refreshTokenService.generateRefreshToken(auth);
-
-            cookieUtil.createRefreshCookie(response, newRefreshToken);
-
-            return ResponseEntity.ok(new AccessTokenResponseDTO(1, "", "Bearer", token));
+            RefreshSessionResultDTO refreshedSession = authService.refreshSession(refreshToken);
+            cookieUtil.createRefreshCookie(response, refreshedSession.getRefreshToken());
+            return ResponseEntity.ok(new AccessTokenResponseDTO(1, "", "Bearer", refreshedSession.getAccessToken(),refreshedSession.getExpiresAt()));
         } catch (Exception e) {
             cookieUtil.clearRefreshCookie(response);
-            return ResponseEntity.status(500).body(new AccessTokenResponseDTO(0, "Server Error", "Bearer", ""));
-        }
+            return ResponseEntity.status(401).body(new AccessTokenResponseDTO(0, "Invalid Token", "Bearer", "", null));        }
     }
 
 }
