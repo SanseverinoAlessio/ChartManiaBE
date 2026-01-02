@@ -9,10 +9,9 @@ import jakarta.transaction.Transactional;
 
 
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken,Long>{    
-    @Transactional 
-    @Modifying
-    @Query("DELETE FROM RefreshToken r where r.user.id = :userId")
-    void deleteByUserId(long userId);
+   
+    /*@Query("DELETE FROM RefreshToken r where r.user.id = :userId")
+    void deleteByUserId(long userId); */
     void deleteByToken(String token);
 
     RefreshToken findByToken(String token);

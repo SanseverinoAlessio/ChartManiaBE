@@ -1,23 +1,24 @@
 package com.chartmania.controller.PersonalArea;
-
+import org.apache.catalina.connector.Response;
 import org.springframework.boot.security.oauth2.server.resource.autoconfigure.OAuth2ResourceServerProperties.Jwt;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.chartmania.dto.muidatagrid.MuiDataGridRequestDTO;
+import com.chartmania.dto.GenericResponseDTO;
 import com.chartmania.dto.chart.CreateChartRequest;
 import com.chartmania.model.Chart;
 import com.chartmania.repository.ChartRepository;
 import com.chartmania.service.ChartService;
 import com.chartmania.service.MuiDataGridService;
-
 import jakarta.validation.Valid;
 
 @RestController
@@ -27,7 +28,8 @@ public class ChartController {
     private MuiDataGridService muiDataGridService;
     private ChartRepository chartRepository;
 
-    public ChartController(ChartService chartService, MuiDataGridService muiDataGridService,ChartRepository chartRepository) {
+    public ChartController(ChartService chartService, MuiDataGridService muiDataGridService,
+            ChartRepository chartRepository) {
         this.chartService = chartService;
         this.muiDataGridService = muiDataGridService;
         this.chartRepository = chartRepository;
@@ -58,7 +60,10 @@ public class ChartController {
     }
 
     @DeleteMapping("/chart/{id}")
-    public void delete() {
-
+    public ResponseEntity<GenericResponseDTO> delete(@PathVariable("id") Long chartId) {
+        GenericResponseDTO response = chartService.deleteChart(chartId);
+        return response.isSuccess() ? 
+            ResponseEntity.status(200).body(response)
+            : ResponseEntity.status(500).body(response);
     }
 }

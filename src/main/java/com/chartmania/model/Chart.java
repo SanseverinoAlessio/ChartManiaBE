@@ -2,6 +2,9 @@ package com.chartmania.model;
 
 import java.time.Instant;
 
+import org.hibernate.annotations.DialectOverride.SQLDelete;
+import org.hibernate.annotations.SoftDelete;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -14,8 +17,10 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
+
 @Entity
 @Table(name = "charts")
+@SoftDelete(columnName = "deleted")
 public class Chart {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -32,4 +32,16 @@ public class ChartService {
         }
     }
 
+    public GenericResponseDTO deleteChart(Long chartId){
+        try{
+            chartRepository.deleteById(chartId);
+            return new GenericResponseDTO(true, "Chart deleted");
+        }
+        catch(Exception e){
+            return new GenericResponseDTO<>(false, "couldn't delete chart");
+        }
+    }
+
+    
+
 }

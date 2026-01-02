@@ -1,8 +1,6 @@
 package com.chartmania.service;
-
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.keygen.Base64StringKeyGenerator;
@@ -87,12 +85,13 @@ public class RefreshTokenService {
         }
     }
 
-    public void deleteRefreshTokens(long userId) throws Exception {
+   /* public void deleteRefreshTokens(long userId) throws Exception {
         try {
             refreshTokenRepository.deleteByUserId(userId);
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }
-    }
+    } */
+
 
 }
