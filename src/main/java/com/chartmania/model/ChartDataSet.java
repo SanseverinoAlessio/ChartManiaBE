@@ -25,31 +25,24 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "charts")
+@Table(name = "chart_datasets")
+@NoArgsConstructor
 @SoftDelete(columnName = "deleted")
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Chart {
+public class ChartDataSet {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id", nullable = false, updatable = false)
-    private User user;
-
     @Setter
     @Column(name = "name", nullable = false, length = 200)
     private String name;
 
-    @Setter
-    @Column(name = "type", nullable = false, length = 50)
-    private String type;
-
-    @Setter 
-    @Column(name = "filename",nullable = false)
-    private String fileName;
+    @Setter(AccessLevel.PACKAGE)
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @JoinColumn(name = "chart_id", nullable = false, updatable = false)
+    private Chart chart;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -57,15 +50,14 @@ public class Chart {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-    @OneToMany(mappedBy = "chart", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ChartDataSet> datasets = new ArrayList<>();
+    @OneToMany(mappedBy = "chartDataSet", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ChartData> points = new ArrayList<>();
 
-    public Chart(User user, String name, String type, String filename) {
-        this.user = user;
+    public ChartDataSet(String name, Chart chart) {
         this.name = name;
-        this.type = type;
-        this.fileName = filename;
+        this.chart = chart;
     }
+    
 
     @PrePersist
     protected void onCreate() {
@@ -75,17 +67,20 @@ public class Chart {
     }
 
     @PreUpdate
-    protected void onUpdate() { 
+    protected void onUpdate() {
         this.updatedAt = Instant.now();
     }
 
-    public void addDataSet(ChartDataSet dataSet) {
-        datasets.add(dataSet);
-        dataSet.setChart(this);
+
+    public void addPoint(ChartData chartData) {
+        points.add(chartData);
+        chartData.setChartDataSet(this);
     }
 
-    public void removeDataSet(ChartDataSet dataSet) {
-        datasets.remove(dataSet);
-        dataSet.setChart(null);
+    public void removePoint(ChartData chartData) {
+        points.remove(chartData);
+        chartData.setChartDataSet(null);
     }
+
+
 }

@@ -4,10 +4,11 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -17,13 +18,12 @@ import com.chartmania.dto.muidatagrid.MuiDataGridRequestDTO;
 import com.chartmania.dto.muidatagrid.SortDTO;
 import com.chartmania.util.GenericSpecification;
 
-import org.springframework.data.domain.Sort;
-
 @Service
 public class MuiDataGridService {
     public <T, ID extends Serializable> Page<T> getData(
             JpaRepository<T, ID> repository,
             MuiDataGridRequestDTO request) {
+    
         List<SortDTO> sortModel = request.getSortModel();
 
         JpaSpecificationExecutor<T> executor = (JpaSpecificationExecutor<T>) repository;

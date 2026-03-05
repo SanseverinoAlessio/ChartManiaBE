@@ -48,8 +48,6 @@ class AuthController {
 
     @ResponseBody
     @PostMapping("/register")
-   
-
     public ResponseEntity<GenericResponseDTO> register(@Valid @RequestBody RegisterRequestDTO requestData) {
         GenericResponseDTO res = this.authService.createUser(requestData);
         return res.isSuccess()
@@ -79,6 +77,7 @@ class AuthController {
             // Refresh Token
             String refreshToken = refreshTokenService.generateRefreshToken(auth);
             cookieUtil.createRefreshCookie(response, refreshToken);
+
 
             return ResponseEntity.ok(new AccessTokenResponseDTO(1, "", "Bearer", token.getToken(),token.getExpiresAt()));
 
@@ -113,6 +112,8 @@ class AuthController {
         try {
             RefreshSessionResultDTO refreshedSession = authService.refreshSession(refreshToken);
             cookieUtil.createRefreshCookie(response, refreshedSession.getRefreshToken());
+
+            
             return ResponseEntity.ok(new AccessTokenResponseDTO(1, "", "Bearer", refreshedSession.getAccessToken(),refreshedSession.getExpiresAt()));
         } catch (Exception e) {
             cookieUtil.clearRefreshCookie(response);

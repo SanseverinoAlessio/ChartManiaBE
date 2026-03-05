@@ -2,7 +2,6 @@ package com.chartmania.service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
@@ -13,13 +12,9 @@ import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.stereotype.Service;
 
-import com.chartmania.model.RefreshToken;
-import com.chartmania.model.User;
-import com.chartmania.repository.RefreshTokenRepository;
-import com.chartmania.repository.UserRepository;
-import org.springframework.security.crypto.keygen.Base64StringKeyGenerator;
-import org.springframework.security.crypto.keygen.StringKeyGenerator;
+import com.chartmania.config.MyUserPrincipal;
 import com.chartmania.dto.auth.AccessTokenGeneratedDTO;
+import com.chartmania.repository.UserRepository;
 
 @Service
 public class JwtService {
@@ -41,9 +36,11 @@ public class JwtService {
     public AccessTokenGeneratedDTO generate(Authentication auth) throws Exception {
         Instant now = Instant.now();
         Instant expiresAt = now.plus(this.expMinutes, ChronoUnit.MINUTES);
+        MyUserPrincipal principal =(MyUserPrincipal) auth.getPrincipal();
+
         try {
             JwtClaimsSet claims = JwtClaimsSet.builder().issuer(this.issuer).subject(auth.getName()).issuedAt(now)
-                    .expiresAt(expiresAt).build();
+                    .expiresAt(expiresAt).claim("userId",principal.getId()).build();
             JwsHeader header = JwsHeader.with(MacAlgorithm.HS256).build();
 
             String token = encoder.encode(JwtEncoderParameters.from(header, claims)).getTokenValue();

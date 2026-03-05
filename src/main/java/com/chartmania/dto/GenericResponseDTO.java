@@ -1,6 +1,6 @@
 package com.chartmania.dto;
 
-public class GenericResponseDTO  <T>{
+public class GenericResponseDTO <T>{
     private boolean success;
     private String message;
     private T data;

@@ -1,8 +1,12 @@
 package com.chartmania.dto.chart;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import lombok.Data;
 
+@Data
 public class CreateChartRequest {
     @NotBlank(message = "Insert a name")
     private String name;
@@ -10,39 +14,12 @@ public class CreateChartRequest {
     @NotBlank
     private String type;
 
-    @NotNull
-    private String json;
+    @NotBlank
+    private String chartImage; //Base64 image
 
+    private List<String> labels = new ArrayList<>();
+    List<CreateChartDatasetsRequest> datasets = new ArrayList<>();
 
-    public CreateChartRequest() {}
-
-    public CreateChartRequest(String name, String type, String json) {
-        this.name = name;
-        this.type = type;
-        this.json = json;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public String getJson() {
-        return json;
-    }
-
-    public void setJson(String json) {
-        this.json = json;
-    }
+    private Instant createdAt;
+    private Instant updatedAt;
 }

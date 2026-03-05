@@ -1,11 +1,18 @@
 package com.chartmania.service;
+import java.util.ArrayList;
+import java.util.Collection;
+
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import com.chartmania.config.MyUserPrincipal;
 import com.chartmania.model.User;
 import com.chartmania.repository.UserRepository;
+
 
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
@@ -22,10 +29,15 @@ public class CustomUserDetailsService implements UserDetailsService {
             throw new UsernameNotFoundException("User not found with username: " + username);        
         }
 
-        return org.springframework.security.core.userdetails.User.builder()
+      /*   return org.springframework.security.core.userdetails.User.builder()
                 .username(user.getUsername())
                 .password(user.getPassword())
                 .authorities("ROLE_USER")
-                .build();
+                .build();*/
+
+        Collection<GrantedAuthority> authorities = new ArrayList<>();
+        authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+        return new MyUserPrincipal(user.getId(), user.getUsername(), user.getPassword(), true, authorities);
+
     }
 }

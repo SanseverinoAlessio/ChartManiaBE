@@ -1,9 +1,15 @@
 package com.chartmania.controller.PersonalArea;
-import org.apache.catalina.connector.Response;
-import org.springframework.boot.security.oauth2.server.resource.autoconfigure.OAuth2ResourceServerProperties.Jwt;
+
+import java.net.MalformedURLException;
+import java.nio.file.NoSuchFileException;
+
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
+import org.springframework.http.CacheControl;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -12,13 +18,18 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import com.chartmania.dto.muidatagrid.MuiDataGridRequestDTO;
+import org.springframework.web.server.ResponseStatusException;
+
 import com.chartmania.dto.GenericResponseDTO;
+import com.chartmania.dto.chart.ChartsResponseDTO;
 import com.chartmania.dto.chart.CreateChartRequest;
+import com.chartmania.dto.chart.GetChartRequest.ChartDTO;
+import com.chartmania.dto.muidatagrid.MuiDataGridRequestDTO;
 import com.chartmania.model.Chart;
 import com.chartmania.repository.ChartRepository;
 import com.chartmania.service.ChartService;
 import com.chartmania.service.MuiDataGridService;
+
 import jakarta.validation.Valid;
 
 @RestController
@@ -36,34 +47,66 @@ public class ChartController {
     }
 
     @GetMapping("charts")
-    public ResponseEntity<Page<Chart>> getCharts(@Valid MuiDataGridRequestDTO request) {
-        return ResponseEntity.status(200).body(this.muiDataGridService.getData(this.chartRepository, request));
-    }
+    public ResponseEntity<GenericResponseDTO> getCharts(@Valid MuiDataGridRequestDTO request) {
+        Page<Chart> pageChart = this.muiDataGridService.getData(this.chartRepository, request);
+        Page<ChartsResponseDTO> pageDto = pageChart.map(chart -> ChartsResponseDTO.fromEntity(chart));
 
-    @GetMapping("chart/{id}")
-    public void getChart() {
-
-    }
-
-    @PostMapping("/chart/create")
-    public void create(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody CreateChartRequest requestData) {
         try {
-            chartService.createChart(requestData);
+            return ResponseEntity.status(200).body(new GenericResponseDTO<>(true, "", pageDto));
         } catch (Exception e) {
-
+            return ResponseEntity.status(500).body(new GenericResponseDTO<>(false, e.toString()));
         }
     }
 
-    @PutMapping("/chart/{id}")
-    public void update() {
+    @GetMapping("chart/{id}")
+    public ResponseEntity<GenericResponseDTO> getChart(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id) throws ResponseStatusException {
+        Long userId = jwt.getClaim("userId");
+        GenericResponseDTO<ChartDTO> response = chartService.getChart(userId, id);
+        
+        return response.isSuccess() ? ResponseEntity.status(200).body(response)
+                : ResponseEntity.status(500).body(response);
+    }
 
+    @GetMapping("/chart/{id}/image")
+    public ResponseEntity<Resource> getChartImage(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id)
+            throws NoSuchFileException, MalformedURLException {
+        Long userId = jwt.getClaim("userId");
+
+        Resource response = chartService.getChartImage(userId, id);
+        return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_JPEG)
+                .cacheControl(CacheControl.noStore())
+                .body(response);
+    }
+
+    @PostMapping("/chart/create")
+    public ResponseEntity<GenericResponseDTO> create(@AuthenticationPrincipal Jwt jwt,
+            @Valid @RequestBody CreateChartRequest requestData) {
+        Long userId = jwt.getClaim("userId");
+        GenericResponseDTO response = chartService.createChart(userId, requestData);
+
+        return response.isSuccess() ? ResponseEntity.status(200).body(response)
+                : ResponseEntity.status(500).body(response);
+    }
+
+    @PutMapping("/chart/{id}")
+    public ResponseEntity<GenericResponseDTO> update(@AuthenticationPrincipal Jwt jwt,
+            @Valid @RequestBody CreateChartRequest requestData, @PathVariable Long id) {
+        Long userId = jwt.getClaim("userId");
+        GenericResponseDTO response = chartService.updateChart(userId, id, requestData);
+
+        return response.isSuccess() ? ResponseEntity.status(200).body(response)
+                : ResponseEntity.status(500).body(response);
     }
 
     @DeleteMapping("/chart/{id}")
-    public ResponseEntity<GenericResponseDTO> delete(@PathVariable("id") Long chartId) {
-        GenericResponseDTO response = chartService.deleteChart(chartId);
-        return response.isSuccess() ? 
-            ResponseEntity.status(200).body(response)
-            : ResponseEntity.status(500).body(response);
+    public ResponseEntity<GenericResponseDTO> delete(@AuthenticationPrincipal Jwt jwt,
+            @PathVariable("id") Long chartId) {
+        Long userId = jwt.getClaim("userId");
+
+        GenericResponseDTO response = chartService.deleteChart(userId, chartId);
+
+        return response.isSuccess() ? ResponseEntity.status(200).body(response)
+                : ResponseEntity.status(500).body(response);
     }
 }

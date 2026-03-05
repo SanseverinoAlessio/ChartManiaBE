@@ -1,17 +1,18 @@
 package com.chartmania.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.chartmania.dto.GenericResponseDTO;
 import com.chartmania.dto.auth.AccessTokenGeneratedDTO;
+import com.chartmania.dto.auth.RefreshSessionResultDTO;
 import com.chartmania.dto.auth.RegisterRequestDTO;
 import com.chartmania.model.User;
 import com.chartmania.repository.UserRepository;
-import com.chartmania.dto.auth.RefreshSessionResultDTO;
-
 
 import jakarta.transaction.Transactional;
 
@@ -21,12 +22,14 @@ public class AuthService {
     private final RefreshTokenService refreshTokenService;
     private final JwtService jwtService;
 
+    @Autowired
+    private CustomUserDetailsService customUserDetailsService;
+
     public AuthService(UserRepository userRepository,RefreshTokenService refreshTokenService,JwtService jwtService) {
         this.userRepository = userRepository;
         this.refreshTokenService = refreshTokenService;
         this.jwtService = jwtService;
     }
-
 
     public RefreshSessionResultDTO refreshSession(String refreshToken) throws Exception{
         // If the token is no longer valid
@@ -37,12 +40,13 @@ public class AuthService {
             }
 
             User user = refreshTokenService.getUserFromToken(refreshToken);
+            UserDetails userDetails = customUserDetailsService.loadUserByUsername(user.getUsername());
             Authentication auth = new UsernamePasswordAuthenticationToken(
-                    user.getUsername(),
+                    userDetails,
                     null,
                     null);
-
-            AccessTokenGeneratedDTO token = jwtService.generate(auth);
+  
+            AccessTokenGeneratedDTO token = jwtService.generate(auth);          
             refreshTokenService.deleteRefreshToken(refreshToken);
 
             // Regenerate refresh token
