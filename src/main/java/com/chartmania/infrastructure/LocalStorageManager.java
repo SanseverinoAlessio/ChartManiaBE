@@ -79,7 +79,7 @@ public class LocalStorageManager {
 
     public void deleteFile(String absolutePath) throws IOException{
         Path path = Paths.get(absolutePath);
-        Files.delete(path);
+        Files.deleteIfExists(path);
     }
 
 

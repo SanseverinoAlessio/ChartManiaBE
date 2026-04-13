@@ -1,5 +1,4 @@
 package com.chartmania.service;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -25,40 +24,39 @@ public class AuthService {
     @Autowired
     private CustomUserDetailsService customUserDetailsService;
 
-    public AuthService(UserRepository userRepository,RefreshTokenService refreshTokenService,JwtService jwtService) {
+    public AuthService(UserRepository userRepository, RefreshTokenService refreshTokenService, JwtService jwtService) {
         this.userRepository = userRepository;
         this.refreshTokenService = refreshTokenService;
         this.jwtService = jwtService;
     }
 
-    public RefreshSessionResultDTO refreshSession(String refreshToken) throws Exception{
+    public RefreshSessionResultDTO refreshSession(String refreshToken) throws Exception {
         // If the token is no longer valid
-            Boolean isTokenValid = refreshTokenService.isTokenValid(refreshToken);
-            if (!isTokenValid) {
-                this.refreshTokenService.deleteRefreshToken(refreshToken);
-                throw new Exception("Session expired");
-            }
+        Boolean isTokenValid = refreshTokenService.isTokenValid(refreshToken);
+        if (!isTokenValid) {
+            this.refreshTokenService.deleteRefreshToken(refreshToken);
+            throw new Exception("Session expired");
+        }
 
-            User user = refreshTokenService.getUserFromToken(refreshToken);
-            UserDetails userDetails = customUserDetailsService.loadUserByUsername(user.getUsername());
-            Authentication auth = new UsernamePasswordAuthenticationToken(
-                    userDetails,
-                    null,
-                    null);
-  
-            AccessTokenGeneratedDTO token = jwtService.generate(auth);          
-            refreshTokenService.deleteRefreshToken(refreshToken);
+        User user = refreshTokenService.getUserFromToken(refreshToken);
+        UserDetails userDetails = customUserDetailsService.loadUserByUsername(user.getUsername());
+        Authentication auth = new UsernamePasswordAuthenticationToken(
+                userDetails,
+                null,
+                null);
 
-            // Regenerate refresh token
-            String newRefreshToken = refreshTokenService.generateRefreshToken(auth);
-        
-            //Return qui
-            return new RefreshSessionResultDTO(newRefreshToken,token.getToken(),token.getExpiresAt());
+        AccessTokenGeneratedDTO token = jwtService.generate(auth);
+        refreshTokenService.deleteRefreshToken(refreshToken);
+
+        // Regenerate refresh token
+        String newRefreshToken = refreshTokenService.generateRefreshToken(auth);
+
+        // Return qui
+        return new RefreshSessionResultDTO(newRefreshToken, token.getToken(), token.getExpiresAt());
     }
 
-    @Transactional 
+    @Transactional
     public GenericResponseDTO createUser(RegisterRequestDTO data) {
-        //TODO: bisogna fare in modo che non si possa salvare uno username uguale
         BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         String hashedPassword = passwordEncoder.encode(data.getPassword());
         User user = new User(
@@ -73,5 +71,15 @@ public class AuthService {
         }
     }
 
+    public Boolean verifyUserExistsByUsername(String username) {
+
+        User user = userRepository.findByUsername(username);
+        return user != null;
+    }
+
+    public Boolean verifyUserExistsByEmail(String email) {
+        User user = userRepository.findByEmail(email);
+        return user != null;
+    }
 
 }

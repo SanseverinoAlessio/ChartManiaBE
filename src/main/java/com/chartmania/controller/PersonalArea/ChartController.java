@@ -58,7 +58,7 @@ public class ChartController {
         }
     }
 
-    @GetMapping("chart/{id}")
+    @GetMapping("charts/{id}")
     public ResponseEntity<GenericResponseDTO> getChart(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id) throws ResponseStatusException {
         Long userId = jwt.getClaim("userId");
         GenericResponseDTO<ChartDTO> response = chartService.getChart(userId, id);
@@ -67,7 +67,7 @@ public class ChartController {
                 : ResponseEntity.status(500).body(response);
     }
 
-    @GetMapping("/chart/{id}/image")
+    @GetMapping("/charts/{id}/image")
     public ResponseEntity<Resource> getChartImage(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id)
             throws NoSuchFileException, MalformedURLException {
         Long userId = jwt.getClaim("userId");
@@ -79,7 +79,7 @@ public class ChartController {
                 .body(response);
     }
 
-    @PostMapping("/chart/create")
+    @PostMapping("/charts/create")
     public ResponseEntity<GenericResponseDTO> create(@AuthenticationPrincipal Jwt jwt,
             @Valid @RequestBody CreateChartRequest requestData) {
         Long userId = jwt.getClaim("userId");
@@ -89,7 +89,7 @@ public class ChartController {
                 : ResponseEntity.status(500).body(response);
     }
 
-    @PutMapping("/chart/{id}")
+    @PutMapping("/charts/{id}")
     public ResponseEntity<GenericResponseDTO> update(@AuthenticationPrincipal Jwt jwt,
             @Valid @RequestBody CreateChartRequest requestData, @PathVariable Long id) {
         Long userId = jwt.getClaim("userId");
@@ -99,7 +99,7 @@ public class ChartController {
                 : ResponseEntity.status(500).body(response);
     }
 
-    @DeleteMapping("/chart/{id}")
+    @DeleteMapping("/charts/{id}")
     public ResponseEntity<GenericResponseDTO> delete(@AuthenticationPrincipal Jwt jwt,
             @PathVariable("id") Long chartId) {
         Long userId = jwt.getClaim("userId");

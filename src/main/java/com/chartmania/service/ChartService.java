@@ -1,5 +1,4 @@
 package com.chartmania.service;
-
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.NoSuchFileException;
@@ -97,7 +96,7 @@ public class ChartService {
         } catch (Exception e) {
 
             System.out.println(e);
-            return new GenericResponseDTO(true, "couldn't create chart");
+            return new GenericResponseDTO(false, "couldn't create chart");
         }
     }
 
@@ -155,7 +154,7 @@ public class ChartService {
             return new GenericResponseDTO(true, "Chart updated");
         } catch (Exception e) {
             System.out.println(e);
-            return new GenericResponseDTO(true, "couldn't update chart");
+            return new GenericResponseDTO(false, "couldn't update chart");
         }
     }
 
@@ -192,6 +191,7 @@ public class ChartService {
     public GenericResponseDTO<ChartDTO> getChart(Long userId, Long chartId) throws ResponseStatusException {
         try {
             Optional<Chart> opt = chartRepository.findByIdAndUser_Id(chartId, userId);
+
             if (opt.isEmpty()) {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND);
             }

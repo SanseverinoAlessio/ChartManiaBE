@@ -5,10 +5,10 @@ public class AccessTokenResponseDTO {
     private String tokenType;
     private String accessToken;
     private Instant expiresAt;
-    private int success;
+    private boolean success;
     private String message;
 
-    public AccessTokenResponseDTO(int success, String message, String tokenType, String accessToken,Instant expiresAt) {
+    public AccessTokenResponseDTO(boolean success, String message, String tokenType, String accessToken,Instant expiresAt) {
         this.success = success;
         this.message = message;
         this.tokenType = tokenType;
@@ -24,7 +24,7 @@ public class AccessTokenResponseDTO {
         return accessToken;
     }
 
-    public int getSuccess() {
+    public boolean getSuccess() {
         return this.success;
     }
 

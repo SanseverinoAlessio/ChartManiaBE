@@ -1,11 +1,14 @@
 package com.chartmania.controller;
-
+import java.util.Map;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -66,8 +69,8 @@ class AuthController {
         }
 
         catch (AuthenticationException e) {
-            System.out.println(e);
-            return ResponseEntity.status(401).body(new AccessTokenResponseDTO(0, "Wrong credentials", "Bearer", "",null));
+            return ResponseEntity.status(401)
+                    .body(new AccessTokenResponseDTO(false, "Wrong credentials", "Bearer", "", null));
         }
 
         try {
@@ -78,19 +81,20 @@ class AuthController {
             String refreshToken = refreshTokenService.generateRefreshToken(auth);
             cookieUtil.createRefreshCookie(response, refreshToken);
 
-
-            return ResponseEntity.ok(new AccessTokenResponseDTO(1, "", "Bearer", token.getToken(),token.getExpiresAt()));
+            return ResponseEntity
+                    .ok(new AccessTokenResponseDTO(true, "", "Bearer", token.getToken(), token.getExpiresAt()));
 
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(new AccessTokenResponseDTO(0, "Server Error", "Bearer", "",null));
+            return ResponseEntity.status(500).body(new AccessTokenResponseDTO(false, "Server Error", "Bearer", "", null));
         }
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<GenericResponseDTO> logout(@CookieValue(name = "refresh-token") String refreshToken, HttpServletResponse response) {
+    public ResponseEntity<GenericResponseDTO> logout(@CookieValue(name = "refresh-token") String refreshToken,
+            HttpServletResponse response) {
         if (refreshToken == null)
             return ResponseEntity.status(400).body(new GenericResponseDTO<>(false, ""));
-            
+
         try {
             refreshTokenService.deleteRefreshToken(refreshToken);
             cookieUtil.clearRefreshCookie(response);
@@ -104,20 +108,47 @@ class AuthController {
     @PostMapping("/refresh-token")
     public ResponseEntity<AccessTokenResponseDTO> refreshToken(
             @CookieValue(name = "refresh-token") String refreshToken, HttpServletResponse response) {
-                        
+
         // Verify if refresh token is valid
-        if(refreshToken == null)
-            return ResponseEntity.status(400).body(new AccessTokenResponseDTO(0, "No refresh token found", "Bearer", "",null));
+        if (refreshToken == null)
+            return ResponseEntity.status(400)
+                    .body(new AccessTokenResponseDTO(false, "No refresh token found", "Bearer", "", null));
 
         try {
             RefreshSessionResultDTO refreshedSession = authService.refreshSession(refreshToken);
             cookieUtil.createRefreshCookie(response, refreshedSession.getRefreshToken());
 
-            
-            return ResponseEntity.ok(new AccessTokenResponseDTO(1, "", "Bearer", refreshedSession.getAccessToken(),refreshedSession.getExpiresAt()));
+            return ResponseEntity.ok(new AccessTokenResponseDTO(true, "", "Bearer", refreshedSession.getAccessToken(),
+                    refreshedSession.getExpiresAt()));
         } catch (Exception e) {
             cookieUtil.clearRefreshCookie(response);
-            return ResponseEntity.status(401).body(new AccessTokenResponseDTO(0, "Invalid Token", "Bearer", "", null));        }
+            return ResponseEntity.status(401).body(new AccessTokenResponseDTO(false, "Invalid Token", "Bearer", "", null));
+        }
+    }
+
+    @GetMapping("/check-username-exists/{username}")
+    public ResponseEntity<GenericResponseDTO> checkUsername(@PathVariable String username) {
+        try {
+            Boolean exists = authService.verifyUserExistsByUsername(username);
+     
+    
+            return ResponseEntity.status(200).body(new GenericResponseDTO<>(true, null,Map.of("exists", exists)));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new GenericResponseDTO<>(false, e.getMessage()));
+        }
+    }
+
+    @GetMapping("/check-email-exists/{email}")
+    public ResponseEntity<GenericResponseDTO> checkEmail(@PathVariable String email) {
+         try {
+            Boolean exists = authService.verifyUserExistsByEmail(email);
+            return ResponseEntity.status(200).body(new GenericResponseDTO<>(true, null,Map.of("exists", exists)));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new GenericResponseDTO<>(false, e.getMessage()));
+        }
+
     }
 
 }

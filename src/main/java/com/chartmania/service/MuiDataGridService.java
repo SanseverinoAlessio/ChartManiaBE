@@ -32,7 +32,6 @@ public class MuiDataGridService {
         // Sorting here
         Sort sort = this.getSort(sortModel);
         Pageable pageable = PageRequest.of(request.getPage(), request.getPageSize(), sort);
-
         
         return executor.findAll(specification,pageable);
     }
