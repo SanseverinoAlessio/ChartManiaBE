@@ -17,15 +17,30 @@ server.error.include-binding-errors=always
 server.error.include-stacktrace=always
 server.error.include-exception=true
 
+# Chart uploads
+chart.upload.directory=${CHART_UPLOAD_DIRECTORY:/uploads/charts}
+
 # MariaDB connection
-spring.datasource.url=jdbc:mariadb://localhost:3306/chartmania
-spring.datasource.username=root
-spring.datasource.password=
+spring.datasource.url=${SPRING_DATASOURCE_URL:jdbc:mariadb://localhost:3306/chartmania}
+spring.datasource.username=${SPRING_DATASOURCE_USERNAME:root}
+spring.datasource.password=${SPRING_DATASOURCE_PASSWORD:}
 
 # ORM / JPA configuration
-spring.jpa.hibernate.ddl-auto=update
-spring.jpa.show-sql=true
+spring.jpa.hibernate.ddl-auto=${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
+spring.jpa.show-sql=${SPRING_JPA_SHOW_SQL:true}
 spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MariaDBDialect
+
+# Security
+secure.cookie=${SECURE_COOKIE:false}
+
+# JWT
+jwt.secret=${JWT_SECRET:dev-secret-change-me}
+jwt.issuer=${JWT_ISSUER:chartmania-api}
+jwt.exp-minutes=${JWT_EXP_MINUTES:80}
+jwt.refresh.token.exp-minutes=${JWT_REFRESH_TOKEN_EXP_MINUTES:14400}
+
+# CORS
+allowed.origin=${ALLOWED_ORIGIN:http://localhost:5173}
 
 
 #Cookie
