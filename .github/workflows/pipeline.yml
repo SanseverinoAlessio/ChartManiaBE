@@ -57,14 +57,20 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      -  name: "Convert Case Repository Owner"
+         run: |
+          REPOSITORY_OWNER="${{github.repository_owner}}"
+          REPOSITORY_OWNER_LOWER=$(echo "$REPOSITORY_OWNER" | tr '[:upper:]' '[:lower:]')
+          echo "REPOSITORY_OWNER_LOWER=$REPOSITORY_OWNER_LOWER" >> "$GITHUB_ENV"   
+
       - name: Build and push Docker image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v6     
         with:
           context: .
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/chartmania-backend:latest
-            ghcr.io/${{ github.repository_owner }}/chartmania-backend:${{ github.sha }}
+            ghcr.io/${{ env.REPOSITORY_OWNER_LOWER }}/chartmania-backend:latest
+            ghcr.io/${{ env.REPOSITORY_OWNER_LOWER }}/chartmania-backend:${{ github.sha }}
 
   deploy:
     runs-on: ubuntu-latest
