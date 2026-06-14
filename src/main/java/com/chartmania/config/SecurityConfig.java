@@ -73,14 +73,12 @@ public class SecurityConfig {
 
     @Bean
     JwtDecoder jwtDecoder() {
-        SecretKey key = new SecretKeySpec(jwtSecret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
-        return NimbusJwtDecoder.withSecretKey(key).build();
+        return NimbusJwtDecoder.withSecretKey(jwtSecretKey()).build();
     }
 
     @Bean
     JwtEncoder jwtEncoder() {
-        SecretKey key = new SecretKeySpec(jwtSecret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
-        return new NimbusJwtEncoder(new ImmutableSecret<>(key));
+        return new NimbusJwtEncoder(new ImmutableSecret<>(jwtSecretKey()));
     }
 
     @Bean
@@ -88,5 +86,11 @@ public class SecurityConfig {
         return config.getAuthenticationManager();
     }
 
-  
+    private SecretKey jwtSecretKey() {
+        byte[] secret = jwtSecret.getBytes(StandardCharsets.UTF_8);
+        if (secret.length < 32) {
+            throw new IllegalStateException("jwt.secret must be at least 32 bytes for HS256");
+        }
+        return new SecretKeySpec(secret, "HmacSHA256");
+    }
 }
