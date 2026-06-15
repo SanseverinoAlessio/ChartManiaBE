@@ -2,9 +2,7 @@ package com.chartmania.repository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
-
 import com.chartmania.model.RefreshToken;
-
 import jakarta.transaction.Transactional;
 
 

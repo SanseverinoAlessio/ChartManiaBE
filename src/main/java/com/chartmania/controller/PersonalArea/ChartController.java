@@ -47,22 +47,29 @@ public class ChartController {
     }
 
     @GetMapping("charts")
-    public ResponseEntity<GenericResponseDTO> getCharts(@Valid MuiDataGridRequestDTO request) {
-        Page<Chart> pageChart = this.muiDataGridService.getData(this.chartRepository, request);
-        Page<ChartsResponseDTO> pageDto = pageChart.map(chart -> ChartsResponseDTO.fromEntity(chart));
+    public ResponseEntity<GenericResponseDTO> getCharts(@Valid MuiDataGridRequestDTO request,
+            @AuthenticationPrincipal Jwt jwt) {
+        String userId = jwt.getClaim("userId").toString();
+        request.setFindBy("id", userId,"user");
+        
 
         try {
+            Page<Chart> pageChart = this.muiDataGridService.getData(this.chartRepository, request);
+            Page<ChartsResponseDTO> pageDto = pageChart.map(chart -> ChartsResponseDTO.fromEntity(chart));
+
             return ResponseEntity.status(200).body(new GenericResponseDTO<>(true, "", pageDto));
         } catch (Exception e) {
+            
             return ResponseEntity.status(500).body(new GenericResponseDTO<>(false, e.toString()));
         }
     }
 
     @GetMapping("charts/{id}")
-    public ResponseEntity<GenericResponseDTO> getChart(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id) throws ResponseStatusException {
+    public ResponseEntity<GenericResponseDTO> getChart(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id)
+            throws ResponseStatusException {
         Long userId = jwt.getClaim("userId");
         GenericResponseDTO<ChartDTO> response = chartService.getChart(userId, id);
-        
+
         return response.isSuccess() ? ResponseEntity.status(200).body(response)
                 : ResponseEntity.status(500).body(response);
     }

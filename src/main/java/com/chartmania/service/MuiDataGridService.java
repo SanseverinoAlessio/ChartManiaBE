@@ -1,9 +1,7 @@
 package com.chartmania.service;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -27,12 +25,15 @@ public class MuiDataGridService {
         List<SortDTO> sortModel = request.getSortModel();
 
         JpaSpecificationExecutor<T> executor = (JpaSpecificationExecutor<T>) repository;
-        Specification<T> specification = GenericSpecification.columnContains(request.getFilter());
+        Specification<T> specification = GenericSpecification.columnContains(request.getFilter(),request.getFindBy());
 
+  
         // Sorting here
         Sort sort = this.getSort(sortModel);
+
+         
         Pageable pageable = PageRequest.of(request.getPage(), request.getPageSize(), sort);
-        
+
         return executor.findAll(specification,pageable);
     }
 

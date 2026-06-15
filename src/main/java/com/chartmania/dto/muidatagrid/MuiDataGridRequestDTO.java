@@ -17,6 +17,8 @@ public class MuiDataGridRequestDTO {
 
     private FilterDTO filter;
 
+    private FindByDTO findBy;
+
     public MuiDataGridRequestDTO() {}
 
     public int getPage() {
@@ -46,6 +48,24 @@ public class MuiDataGridRequestDTO {
     }
     public FilterDTO getFilter(){
         return filter;
+    }
+
+    public void setFindBy(String field, String value){
+        findBy = new FindByDTO();
+        findBy.setField(field);
+        findBy.setValue(value);
+    }
+
+      public void setFindBy(String field, String value,String entityName){
+        findBy = new FindByDTO();
+        findBy.setField(field);
+        findBy.setValue(value);
+        findBy.setEntityName(entityName);
+    }
+
+
+    public FindByDTO getFindBy(){
+        return findBy;
     }
 
     public List<SortDTO> getSortModel(){
